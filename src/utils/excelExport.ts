@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { AppState } from './storage';
+import { getRiskLevel } from './rpnCalculator';
 
 export function exportToExcel(state: AppState): void {
   const wb = XLSX.utils.book_new();
@@ -30,10 +31,77 @@ export function exportToExcel(state: AppState): void {
   const wsCover = XLSX.utils.aoa_to_sheet(coverData);
   XLSX.utils.book_append_sheet(wb, wsCover, 'Deckblatt');
 
-  // 2. FMEA Arbeitsblatt Sheet
+  // 2. Hierarchischer Prozessablauf Sheet
+  const processHeaders = [
+    'Hierarchie-Ebene',
+    'Schritt-Nr.',
+    'Prozessbezeichnung (Hierarchie)',
+    'Übergeordneter Prozess',
+    'Kategorie',
+    'Verantwortlicher Bereich',
+    'Maschine / Ausrüstung',
+    'Anzahl FMEA-Risiken',
+    'Max. RPZ',
+    'Kontrollplan Prüfpunkte',
+    'Beschreibung',
+  ];
+
+  // Organize steps hierarchically
+  const parentSteps = state.steps.filter((s) => s.level === 1 || !s.parentId).sort((a, b) => a.order - b.order);
+  const processRows: any[][] = [];
+
+  parentSteps.forEach((parent) => {
+    // Parent Row stats
+    const subSteps = state.steps.filter((s) => s.parentId === parent.id && s.level === 2).sort((a, b) => a.order - b.order);
+    const allRelevantIds = [parent.id, ...subSteps.map(s => s.id)];
+    const parentFmeas = state.fmeaItems.filter(f => allRelevantIds.includes(f.stepId));
+    const parentCps = state.controlPlanItems.filter(cp => allRelevantIds.includes(cp.stepId));
+    const maxRpn = parentFmeas.length > 0 ? Math.max(...parentFmeas.map(f => f.rpn)) : 0;
+
+    processRows.push([
+      '1. Hauptprozess',
+      parent.stepNumber,
+      `[${parent.stepNumber}] ${parent.name.toUpperCase()}`,
+      '- (Hauptstufe)',
+      parent.category.toUpperCase(),
+      parent.responsibleArea,
+      parent.machineEquipment || '-',
+      parentFmeas.length,
+      maxRpn || '-',
+      parentCps.length,
+      parent.description || '',
+    ]);
+
+    // Sub-process Rows (Indented with arrow)
+    subSteps.forEach((sub) => {
+      const subFmeas = state.fmeaItems.filter(f => f.stepId === sub.id);
+      const subCps = state.controlPlanItems.filter(cp => cp.stepId === sub.id);
+      const subMaxRpn = subFmeas.length > 0 ? Math.max(...subFmeas.map(f => f.rpn)) : 0;
+
+      processRows.push([
+        '   2. Teilschritt',
+        sub.stepNumber,
+        `      ↳ [${sub.stepNumber}] ${sub.name}`,
+        `[${parent.stepNumber}] ${parent.name}`,
+        sub.category,
+        sub.responsibleArea,
+        sub.machineEquipment || '-',
+        subFmeas.length,
+        subMaxRpn || '-',
+        subCps.length,
+        sub.description || '',
+      ]);
+    });
+  });
+
+  const wsProcess = XLSX.utils.aoa_to_sheet([processHeaders, ...processRows]);
+  XLSX.utils.book_append_sheet(wb, wsProcess, 'Prozesshierarchie');
+
+  // 3. FMEA Arbeitsblatt Sheet
   const fmeaHeaders = [
     'Schritt-Nr.',
-    'Prozessschritt',
+    'Prozessschritt (Hierarchie)',
+    'Hauptprozess',
     'Prozessfunktion (Soll)',
     'Potenzieller Fehler',
     'Potenzielle Fehlerfolge',
@@ -45,6 +113,7 @@ export function exportToExcel(state: AppState): void {
     'Entdeckungsmaßnahme',
     'E (Entdeckung)',
     'RPZ (Initial)',
+    'Risiko-Bewertung',
     'Empfohlene Maßnahme',
     'Verantwortlich',
     'Zieldatum',
@@ -58,9 +127,20 @@ export function exportToExcel(state: AppState): void {
 
   const fmeaRows = state.fmeaItems.map((item) => {
     const step = state.steps.find((s) => s.id === item.stepId);
+    let parentStepName = '-';
+    if (step?.parentId) {
+      const parent = state.steps.find(s => s.id === step.parentId);
+      if (parent) parentStepName = `[${parent.stepNumber}] ${parent.name}`;
+    } else if (step) {
+      parentStepName = `[${step.stepNumber}] ${step.name}`;
+    }
+
+    const risk = getRiskLevel(item.severity, item.rpn, state.thresholds);
+
     return [
       step ? step.stepNumber : '',
-      step ? step.name : '',
+      step ? (step.level === 2 ? `↳ ${step.name}` : step.name) : '',
+      parentStepName,
       item.processFunction,
       item.failureMode,
       item.failureEffect,
@@ -72,6 +152,7 @@ export function exportToExcel(state: AppState): void {
       item.currentControlDetection,
       item.detection,
       item.rpn,
+      risk.label,
       item.recommendedAction,
       item.responsiblePerson,
       item.targetDate,
@@ -87,10 +168,11 @@ export function exportToExcel(state: AppState): void {
   const wsFmea = XLSX.utils.aoa_to_sheet([fmeaHeaders, ...fmeaRows]);
   XLSX.utils.book_append_sheet(wb, wsFmea, 'Prozess-FMEA');
 
-  // 3. Kontrollplan Sheet
+  // 4. Kontrollplan Sheet
   const cpHeaders = [
     'Schritt-Nr.',
-    'Prozessschritt',
+    'Prozessschritt (Hierarchie)',
+    'Hauptprozess',
     'Maschine / Vorrichtung',
     'Prüfmerkmal',
     'Merkmalstyp',
@@ -105,9 +187,18 @@ export function exportToExcel(state: AppState): void {
 
   const cpRows = state.controlPlanItems.map((item) => {
     const step = state.steps.find((s) => s.id === item.stepId);
+    let parentStepName = '-';
+    if (step?.parentId) {
+      const parent = state.steps.find(s => s.id === step.parentId);
+      if (parent) parentStepName = `[${parent.stepNumber}] ${parent.name}`;
+    } else if (step) {
+      parentStepName = `[${step.stepNumber}] ${step.name}`;
+    }
+
     return [
       step ? step.stepNumber : '',
-      step ? step.name : '',
+      step ? (step.level === 2 ? `↳ ${step.name}` : step.name) : '',
+      parentStepName,
       step ? step.machineEquipment || '-' : '-',
       item.characteristicName,
       item.characteristicType === 'product' ? 'Produkt' : 'Prozess',

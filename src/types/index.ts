@@ -10,13 +10,15 @@ export type ProcessCategory =
 
 export interface ProcessStep {
   id: string;
-  stepNumber: string; // e.g., "10", "20", "30"
-  name: string; // e.g. "Wareneingang"
+  stepNumber: string; // e.g. "10", "10.1", "10.2", "20"
+  name: string; // e.g. "Wareneingang" oder "WE Buchung"
   category: ProcessCategory;
   description: string;
   responsibleArea: string; // e.g., "Logistik", "Fertigung", "Qualitätssicherung"
-  machineEquipment?: string; // e.g., "Stapler, Barcodescanner, Messschieber"
+  machineEquipment?: string; // e.g., "Flurförderzeuge, Barcodescanner"
   order: number;
+  level: 1 | 2; // 1 = Hauptprozess, 2 = Unterprozess / Teilschritt
+  parentId?: string; // ID des übergeordneten Hauptprozesses bei level === 2
 }
 
 export type SpecialCharacteristicType = 'none' | 'CC' | 'SC'; // Critical (Sicherheit/Zulassung) or Significant (Funktion/Passform)
@@ -27,14 +29,14 @@ export interface FmeaItem {
   id: string;
   stepId: string; // References ProcessStep.id
   processFunction: string; // Soll-Zustand / Funktion des Prozessschrittes
-  failureMode: string; // Potenzieller Fehler (z.B. "Falsches Material angeliefert")
-  failureEffect: string; // Potenzielle Fehlerfolge (z.B. "Ausschuss in Fertigung, Bandstillstand")
+  failureMode: string; // Potenzieller Fehler
+  failureEffect: string; // Potenzielle Fehlerfolge
   severity: number; // Bedeutung B (1-10)
   specialCharacteristic: SpecialCharacteristicType;
-  failureCause: string; // Potenzielle Fehlerursache (z.B. "Lieferanten-Verwechslung, fehlende Kennzeichnung")
+  failureCause: string; // Potenzielle Fehlerursache
   occurrence: number; // Auftretenswahrscheinlichkeit A (1-10)
-  currentControlPrevention: string; // Aktuelle Vermeidungsmaßnahme (z.B. "Lieferantenvereinbarung, Barcode-Validierung")
-  currentControlDetection: string; // Aktuelle Entdeckungsmaßnahme (z.B. "Sichtprüfung Wareneingang, Lieferscheinabgleich")
+  currentControlPrevention: string; // Aktuelle Vermeidungsmaßnahme
+  currentControlDetection: string; // Aktuelle Entdeckungsmaßnahme
   detection: number; // Entdeckungswahrscheinlichkeit E (1-10)
   rpn: number; // Risikoprioritätszahl (B * A * E)
   
@@ -57,16 +59,16 @@ export interface FmeaItem {
 export interface ControlPlanItem {
   id: string;
   stepId: string; // References ProcessStep.id
-  characteristicName: string; // Produkt- oder Prozessmerkmal (z.B. "Maßhaltigkeit Länge", "Etikett-Vollständigkeit")
+  characteristicName: string; // Produkt- oder Prozessmerkmal
   characteristicType: 'product' | 'process';
   isSpecial: boolean;
   specialType?: SpecialCharacteristicType;
-  specification: string; // Vorgabe / Toleranz (z.B. "50.0 ± 0.2 mm", "100% frei von Kratzern")
-  evaluationMeasurementTechnique: string; // Prüfmittel / Messmethode (z.B. "Messschieber digital", "Optische Prüfung")
-  sampleSize: string; // Stichprobenumfang (z.B. "5 Teile", "100%", "3 Muster")
-  sampleFrequency: string; // Prüfhäufigkeit (z.B. "pro Charge", "stündlich", "bei jedem Rüstvorgang")
-  controlMethod: string; // Lenkungsmethode (z.B. "Regelkarte SPC", "Prüfprotokoll WE", "Poka-Yoke Sperre")
-  reactionPlan: string; // Reaktionsplan bei Abweichung (z.B. "Teile sperren, QS benachrichtigen, Fertigung stoppen")
+  specification: string; // Vorgabe / Toleranz
+  evaluationMeasurementTechnique: string; // Prüfmittel / Messmethode
+  sampleSize: string; // Stichprobenumfang
+  sampleFrequency: string; // Prüfhäufigkeit
+  controlMethod: string; // Lenkungsmethode
+  reactionPlan: string; // Reaktionsplan bei Abweichung
   linkedFmeaItemId?: string;
 }
 

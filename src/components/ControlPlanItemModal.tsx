@@ -97,7 +97,7 @@ export const ControlPlanItemModal: React.FC<ControlPlanItemModalProps> = ({
               >
                 {steps.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.stepNumber} - {s.name}
+                    {s.level === 2 ? `   ↳ ${s.stepNumber} - ${s.name}` : `[${s.stepNumber}] ${s.name}`}
                   </option>
                 ))}
               </select>

@@ -2,11 +2,11 @@ import { ProcessStep, FmeaItem, ControlPlanItem, ProjectMeta, RiskThresholds } f
 import { DEFAULT_PROCESS_STEPS, DEFAULT_FMEA_ITEMS, DEFAULT_CONTROL_PLAN_ITEMS, DEFAULT_PROJECT_META, DEFAULT_THRESHOLDS } from '../data/defaultData';
 
 const STORAGE_KEYS = {
-  STEPS: 'fmea_process_steps_v1',
-  FMEA: 'fmea_items_v1',
-  CONTROL_PLAN: 'fmea_control_plan_items_v1',
-  PROJECT_META: 'fmea_project_meta_v1',
-  THRESHOLDS: 'fmea_risk_thresholds_v1',
+  STEPS: 'fmea_process_steps_v2',
+  FMEA: 'fmea_items_v2',
+  CONTROL_PLAN: 'fmea_control_plan_items_v2',
+  PROJECT_META: 'fmea_project_meta_v2',
+  THRESHOLDS: 'fmea_risk_thresholds_v2',
 };
 
 export interface AppState {

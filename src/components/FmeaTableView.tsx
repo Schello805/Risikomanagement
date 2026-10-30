@@ -46,9 +46,16 @@ export const FmeaTableView: React.FC<FmeaTableViewProps> = ({
   // Filtered Items
   const filteredItems = useMemo(() => {
     return fmeaItems.filter((item) => {
-      // Step filter
-      if (selectedStepIdFilter && item.stepId !== selectedStepIdFilter) {
-        return false;
+      // Step filter (supports parent filter showing children)
+      if (selectedStepIdFilter) {
+        const selectedStep = steps.find(s => s.id === selectedStepIdFilter);
+        if (selectedStep?.level === 1) {
+          const childIds = steps.filter(s => s.parentId === selectedStepIdFilter).map(s => s.id);
+          const validIds = [selectedStepIdFilter, ...childIds];
+          if (!validIds.includes(item.stepId)) return false;
+        } else {
+          if (item.stepId !== selectedStepIdFilter) return false;
+        }
       }
 
       // Quick filter type
@@ -114,12 +121,12 @@ export const FmeaTableView: React.FC<FmeaTableViewProps> = ({
             <select
               value={selectedStepIdFilter || ''}
               onChange={(e) => onSelectStepIdFilter(e.target.value || undefined)}
-              className="px-2.5 py-1.5 text-xs bg-slate-50 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium text-slate-700"
+              className="px-2.5 py-1.5 text-xs bg-slate-50 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium text-slate-700 max-w-[260px]"
             >
               <option value="">Alle Prozessschritte ({steps.length})</option>
               {steps.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.stepNumber} - {s.name}
+                  {s.level === 2 ? `   ↳ ${s.stepNumber} - ${s.name}` : `[${s.stepNumber}] ${s.name}`}
                 </option>
               ))}
             </select>

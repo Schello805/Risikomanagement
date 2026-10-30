@@ -167,7 +167,7 @@ export const FmeaItemModal: React.FC<FmeaItemModalProps> = ({
                 >
                   {steps.map((step) => (
                     <option key={step.id} value={step.id}>
-                      {step.stepNumber} - {step.name}
+                      {step.level === 2 ? `   ↳ ${step.stepNumber} - ${step.name}` : `[${step.stepNumber}] ${step.name}`}
                     </option>
                   ))}
                 </select>
