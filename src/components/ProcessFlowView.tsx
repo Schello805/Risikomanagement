@@ -17,7 +17,8 @@ import {
   CornerDownRight,
   FolderPlus,
   ArrowRight,
-  Filter
+  Filter,
+  RotateCcw
 } from 'lucide-react';
 import { ProcessStep, FmeaItem, ControlPlanItem, ProcessCategory } from '../types';
 import { getRiskLevel } from '../utils/rpnCalculator';
@@ -31,6 +32,7 @@ interface ProcessFlowViewProps {
   onDeleteStep: (id: string) => void;
   onMoveStep: (id: string, direction: 'up' | 'down') => void;
   onSelectStepFilter: (stepId: string, targetTab: 'fmea' | 'control_plan') => void;
+  onResetHierarchy?: () => void;
 }
 
 const CATEGORY_CONFIG: Record<ProcessCategory, { label: string; icon: React.ReactNode; bg: string; text: string; border: string }> = {
@@ -53,6 +55,7 @@ export const ProcessFlowView: React.FC<ProcessFlowViewProps> = ({
   onDeleteStep,
   onMoveStep,
   onSelectStepFilter,
+  onResetHierarchy,
 }) => {
   // Modal / Form state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -206,6 +209,21 @@ export const ProcessFlowView: React.FC<ProcessFlowViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {onResetHierarchy && (
+            <button
+              onClick={() => {
+                if (confirm('Standard-Prozesshierarchie mit Wareneingang (10.1, 10.2, 10.3) bis Versand neu laden?')) {
+                  onResetHierarchy();
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all"
+              title="Standard-Hierarchie (WE Buchung, WE Prüfung etc.) laden"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <span>Standard-Hierarchie laden</span>
+            </button>
+          )}
+
           <button
             onClick={() => handleOpenAddModal(1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition-all active:scale-95"

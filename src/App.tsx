@@ -256,6 +256,7 @@ export const App: React.FC = () => {
             onDeleteStep={handleDeleteStep}
             onMoveStep={handleMoveStep}
             onSelectStepFilter={handleSelectStepFilter}
+            onResetHierarchy={handleResetDefaults}
           />
         )}
 
