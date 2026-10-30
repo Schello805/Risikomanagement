@@ -58,12 +58,14 @@ export function exportToExcel(state: AppState): void {
     const parentCps = state.controlPlanItems.filter(cp => allRelevantIds.includes(cp.stepId));
     const maxRpn = parentFmeas.length > 0 ? Math.max(...parentFmeas.map(f => f.rpn)) : 0;
 
+    const parentCat = (state.categories || []).find(c => c.id === parent.category)?.name || parent.category;
+
     processRows.push([
       '1. Hauptprozess',
       parent.stepNumber,
       `[${parent.stepNumber}] ${parent.name.toUpperCase()}`,
       '- (Hauptstufe)',
-      parent.category.toUpperCase(),
+      parentCat.toUpperCase(),
       parent.responsibleArea,
       parent.machineEquipment || '-',
       parentFmeas.length,
@@ -77,13 +79,14 @@ export function exportToExcel(state: AppState): void {
       const subFmeas = state.fmeaItems.filter(f => f.stepId === sub.id);
       const subCps = state.controlPlanItems.filter(cp => cp.stepId === sub.id);
       const subMaxRpn = subFmeas.length > 0 ? Math.max(...subFmeas.map(f => f.rpn)) : 0;
+      const subCat = (state.categories || []).find(c => c.id === sub.category)?.name || sub.category;
 
       processRows.push([
         '   2. Teilschritt',
         sub.stepNumber,
         `      ↳ [${sub.stepNumber}] ${sub.name}`,
         `[${parent.stepNumber}] ${parent.name}`,
-        sub.category,
+        subCat,
         sub.responsibleArea,
         sub.machineEquipment || '-',
         subFmeas.length,

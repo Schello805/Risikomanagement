@@ -1,5 +1,5 @@
-import { ProcessStep, FmeaItem, ControlPlanItem, ProjectMeta, RiskThresholds } from '../types';
-import { DEFAULT_PROCESS_STEPS, DEFAULT_FMEA_ITEMS, DEFAULT_CONTROL_PLAN_ITEMS, DEFAULT_PROJECT_META, DEFAULT_THRESHOLDS } from '../data/defaultData';
+import { ProcessStep, FmeaItem, ControlPlanItem, ProjectMeta, RiskThresholds, ProcessCategoryItem } from '../types';
+import { DEFAULT_PROCESS_STEPS, DEFAULT_FMEA_ITEMS, DEFAULT_CONTROL_PLAN_ITEMS, DEFAULT_PROJECT_META, DEFAULT_THRESHOLDS, DEFAULT_CATEGORIES } from '../data/defaultData';
 
 const STORAGE_KEYS = {
   STEPS: 'fmea_process_steps_v5',
@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   CONTROL_PLAN: 'fmea_control_plan_items_v5',
   PROJECT_META: 'fmea_project_meta_v5',
   THRESHOLDS: 'fmea_risk_thresholds_v5',
+  CATEGORIES: 'fmea_categories_v5',
 };
 
 export interface AppState {
@@ -15,9 +16,9 @@ export interface AppState {
   controlPlanItems: ControlPlanItem[];
   projectMeta: ProjectMeta;
   thresholds: RiskThresholds;
+  categories: ProcessCategoryItem[];
 }
 
-// Prüft, ob Daten aus dem alten Demoprojekt ("Precision-X") stammen
 export function containsDemoData(state: Partial<AppState>): boolean {
   if (state.projectMeta?.projectName?.includes('Precision-X') || state.projectMeta?.partNumber?.includes('PX-8820')) {
     return true;
@@ -48,7 +49,6 @@ export function purgeAllDemoStorage(): void {
 
 export function loadAppState(): AppState {
   try {
-    // 1. Zuerst prüfen, ob noch alte Demodaten im localStorage schlummern
     let hasDemoInStorage = false;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -62,7 +62,6 @@ export function loadAppState(): AppState {
     }
 
     if (hasDemoInStorage) {
-      console.warn('Alte Demodaten im Speicher gefunden -> vollständiger Reset auf leeres Projekt.');
       purgeAllDemoStorage();
       return resetToDefaults();
     }
@@ -72,6 +71,7 @@ export function loadAppState(): AppState {
     const rawCp = localStorage.getItem(STORAGE_KEYS.CONTROL_PLAN);
     const rawMeta = localStorage.getItem(STORAGE_KEYS.PROJECT_META);
     const rawThresholds = localStorage.getItem(STORAGE_KEYS.THRESHOLDS);
+    const rawCats = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
 
     const parsed: AppState = {
       steps: rawSteps ? JSON.parse(rawSteps) : [],
@@ -79,6 +79,7 @@ export function loadAppState(): AppState {
       controlPlanItems: rawCp ? JSON.parse(rawCp) : [],
       projectMeta: rawMeta ? JSON.parse(rawMeta) : DEFAULT_PROJECT_META,
       thresholds: rawThresholds ? JSON.parse(rawThresholds) : DEFAULT_THRESHOLDS,
+      categories: rawCats ? JSON.parse(rawCats) : DEFAULT_CATEGORIES,
     };
 
     if (containsDemoData(parsed)) {
@@ -95,7 +96,6 @@ export function loadAppState(): AppState {
 
 export function saveAppState(state: AppState): void {
   try {
-    // Verhindern, dass versehentlich Demodaten zurückgespeichert werden
     if (containsDemoData(state)) {
       purgeAllDemoStorage();
       return;
@@ -106,6 +106,7 @@ export function saveAppState(state: AppState): void {
     localStorage.setItem(STORAGE_KEYS.CONTROL_PLAN, JSON.stringify(state.controlPlanItems));
     localStorage.setItem(STORAGE_KEYS.PROJECT_META, JSON.stringify(state.projectMeta));
     localStorage.setItem(STORAGE_KEYS.THRESHOLDS, JSON.stringify(state.thresholds));
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(state.categories));
   } catch (err) {
     console.error('Fehler beim Speichern in localStorage', err);
   }
@@ -131,6 +132,7 @@ export function resetToDefaults(): AppState {
       revisionNumber: "Rev. 1.0",
     },
     thresholds: DEFAULT_THRESHOLDS,
+    categories: DEFAULT_CATEGORIES,
   };
   saveAppState(defaults);
   return defaults;

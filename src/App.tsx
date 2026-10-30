@@ -9,8 +9,9 @@ import { FmeaItemModal } from './components/FmeaItemModal';
 import { ControlPlanItemModal } from './components/ControlPlanItemModal';
 import { ProjectMetaModal } from './components/ProjectMetaModal';
 import { SettingsModal } from './components/SettingsModal';
+import { CategoryManagerModal } from './components/CategoryManagerModal';
 
-import { ProcessStep, FmeaItem, ControlPlanItem, ProjectMeta, RiskThresholds } from './types';
+import { ProcessStep, FmeaItem, ControlPlanItem, ProjectMeta, RiskThresholds, ProcessCategoryItem } from './types';
 import { loadAppState, saveAppState, resetToDefaults, containsDemoData, purgeAllDemoStorage, AppState } from './utils/storage';
 import { exportToExcel } from './utils/excelExport';
 import { exportPdfReport } from './utils/pdfExport';
@@ -35,6 +36,7 @@ export const App: React.FC = () => {
 
   const [isMetaModalOpen, setIsMetaModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // Automatischer Demodaten-Schutz beim Starten
   useEffect(() => {
@@ -55,6 +57,34 @@ export const App: React.FC = () => {
     const risk = getRiskLevel(i.severity, i.rpn, appState.thresholds);
     return risk.level === 'high';
   }).length;
+
+  // Handlers for Categories (CRUD)
+  const handleAddCategory = (newCatData: Omit<ProcessCategoryItem, 'id'>) => {
+    const newCat: ProcessCategoryItem = {
+      ...newCatData,
+      id: `cat-${Date.now()}`,
+    };
+    setAppState((prev) => ({
+      ...prev,
+      categories: [...prev.categories, newCat],
+    }));
+  };
+
+  const handleUpdateCategory = (updatedCat: ProcessCategoryItem) => {
+    setAppState((prev) => ({
+      ...prev,
+      categories: prev.categories.map((c) => (c.id === updatedCat.id ? updatedCat : c)),
+    }));
+  };
+
+  const handleDeleteCategory = (catId: string) => {
+    const fallbackCatId = appState.categories.find((c) => c.id !== catId)?.id || 'allgemein';
+    setAppState((prev) => ({
+      ...prev,
+      categories: prev.categories.filter((c) => c.id !== catId),
+      steps: prev.steps.map((s) => (s.category === catId ? { ...s, category: fallbackCatId } : s)),
+    }));
+  };
 
   // Handlers for Process Steps
   const handleAddStep = (newStepData: Omit<ProcessStep, 'id' | 'order'>) => {
@@ -261,12 +291,13 @@ export const App: React.FC = () => {
             steps={appState.steps}
             fmeaItems={appState.fmeaItems}
             controlPlanItems={appState.controlPlanItems}
+            categories={appState.categories}
+            onOpenCategoryManager={() => setIsCategoryModalOpen(true)}
             onAddStep={handleAddStep}
             onUpdateStep={handleUpdateStep}
             onDeleteStep={handleDeleteStep}
             onMoveStep={handleMoveStep}
             onSelectStepFilter={handleSelectStepFilter}
-            onResetHierarchy={handleResetDefaults}
           />
         )}
 
@@ -372,6 +403,16 @@ export const App: React.FC = () => {
         appState={appState}
         onRestoreState={handleRestoreState}
         onResetDefaults={handleResetDefaults}
+      />
+
+      <CategoryManagerModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        categories={appState.categories}
+        steps={appState.steps}
+        onAddCategory={handleAddCategory}
+        onUpdateCategory={handleUpdateCategory}
+        onDeleteCategory={handleDeleteCategory}
       />
 
     </div>

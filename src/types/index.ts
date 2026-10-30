@@ -1,18 +1,15 @@
-export type ProcessCategory = 
-  | 'wareneingang'
-  | 'pruefung'
-  | 'lager'
-  | 'kommissionierung'
-  | 'fertigung'
-  | 'endpruefung'
-  | 'verpackung'
-  | 'versand';
+export interface ProcessCategoryItem {
+  id: string; // e.g. "wareneingang", "cat-12345"
+  name: string; // e.g. "Wareneingang", "Lackierung", "Spritzguss"
+  color: string; // e.g. "sky", "emerald", "amber", "indigo", "violet", "red", "orange", "cyan", "rose", "slate"
+  description?: string;
+}
 
 export interface ProcessStep {
   id: string;
   stepNumber: string; // e.g. "10", "10.1", "10.2", "20"
   name: string; // e.g. "Wareneingang" oder "WE Buchung"
-  category: ProcessCategory;
+  category: string; // References ProcessCategoryItem.id
   description: string;
   responsibleArea: string; // e.g., "Logistik", "Fertigung", "Qualitätssicherung"
   machineEquipment?: string; // e.g., "Flurförderzeuge, Barcodescanner"
