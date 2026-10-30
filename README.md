@@ -101,7 +101,7 @@ npm install
 ```bash
 npm run dev
 ```
-Öffne anschließend die im Terminal angezeigte Adresse im Browser (üblicherweise [http://localhost:5173](http://localhost:5173)).
+Öffne anschließend die im Terminal angezeigte Adresse im Browser (üblicherweise [http://localhost:5180](http://localhost:5180)).
 
 ### 3. Produktions-Build erstellen
 ```bash

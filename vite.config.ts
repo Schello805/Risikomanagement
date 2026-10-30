@@ -14,7 +14,8 @@ export default defineConfig({
     __BUILD_TIMESTAMP__: JSON.stringify(new Date().toLocaleString('de-DE')),
   },
   server: {
-    port: 5173,
+    port: 5180,
+    strictPort: true,
     open: true
   },
   build: {

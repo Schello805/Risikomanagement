@@ -26,7 +26,7 @@ Dieses Projekt steht unter der **Creative Commons Attribution-NonCommercial 4.0 
    ```bash
    npm run dev
    ```
-   Die Webapplikation öffnet sich unter `http://localhost:5173`.
+   Die Webapplikation öffnet sich unter `http://localhost:5180`.
 
 4. Type-Check und Build testen:
    ```bash
