@@ -11,7 +11,7 @@ import { ProjectMetaModal } from './components/ProjectMetaModal';
 import { SettingsModal } from './components/SettingsModal';
 
 import { ProcessStep, FmeaItem, ControlPlanItem, ProjectMeta, RiskThresholds } from './types';
-import { loadAppState, saveAppState, resetToDefaults, AppState } from './utils/storage';
+import { loadAppState, saveAppState, resetToDefaults, containsDemoData, purgeAllDemoStorage, AppState } from './utils/storage';
 import { exportToExcel } from './utils/excelExport';
 import { exportPdfReport } from './utils/pdfExport';
 import { getRiskLevel } from './utils/rpnCalculator';
@@ -35,6 +35,15 @@ export const App: React.FC = () => {
 
   const [isMetaModalOpen, setIsMetaModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // Automatischer Demodaten-Schutz beim Starten
+  useEffect(() => {
+    if (containsDemoData(appState)) {
+      console.warn('Demodaten erkannt -> Bereinige State vollständig.');
+      purgeAllDemoStorage();
+      setAppState(resetToDefaults());
+    }
+  }, []);
 
   // Save to localStorage automatically on state change
   useEffect(() => {
@@ -237,6 +246,7 @@ export const App: React.FC = () => {
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         onExportExcel={() => exportToExcel(appState)}
         onExportPdf={() => exportPdfReport(appState, 'both')}
+        onResetProject={handleResetDefaults}
         redRiskCount={redRiskCount}
         totalFmeaCount={appState.fmeaItems.length}
         totalControlPlanCount={appState.controlPlanItems.length}

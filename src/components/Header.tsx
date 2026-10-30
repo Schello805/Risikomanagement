@@ -10,7 +10,8 @@ import {
   Settings, 
   SlidersHorizontal,
   FolderOpen,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 import { ProjectMeta, RiskThresholds } from '../types';
 
@@ -24,6 +25,7 @@ interface HeaderProps {
   onOpenSettingsModal: () => void;
   onExportExcel: () => void;
   onExportPdf: () => void;
+  onResetProject: () => void;
   redRiskCount: number;
   totalFmeaCount: number;
   totalControlPlanCount: number;
@@ -37,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSettingsModal,
   onExportExcel,
   onExportPdf,
+  onResetProject,
   redRiskCount,
   totalFmeaCount,
   totalControlPlanCount,
@@ -100,6 +103,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <FileText className="w-3.5 h-3.5 text-brand-400" />
             <span>PDF Bericht</span>
+          </button>
+
+          <button
+            onClick={() => {
+              if (confirm('Möchtest du wirklich alle Daten löschen und das Projekt vollständig leeren?')) {
+                onResetProject();
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-300 hover:text-white text-xs border border-red-800/50 transition-all"
+            title="Projekt vollständig leeren"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Projekt leeren</span>
           </button>
 
           {/* Project Settings Modal Trigger */}

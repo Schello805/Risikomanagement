@@ -2,11 +2,11 @@ import { ProcessStep, FmeaItem, ControlPlanItem, ProjectMeta, RiskThresholds } f
 import { DEFAULT_PROCESS_STEPS, DEFAULT_FMEA_ITEMS, DEFAULT_CONTROL_PLAN_ITEMS, DEFAULT_PROJECT_META, DEFAULT_THRESHOLDS } from '../data/defaultData';
 
 const STORAGE_KEYS = {
-  STEPS: 'fmea_process_steps_v4',
-  FMEA: 'fmea_items_v4',
-  CONTROL_PLAN: 'fmea_control_plan_items_v4',
-  PROJECT_META: 'fmea_project_meta_v4',
-  THRESHOLDS: 'fmea_risk_thresholds_v4',
+  STEPS: 'fmea_process_steps_v5',
+  FMEA: 'fmea_items_v5',
+  CONTROL_PLAN: 'fmea_control_plan_items_v5',
+  PROJECT_META: 'fmea_project_meta_v5',
+  THRESHOLDS: 'fmea_risk_thresholds_v5',
 };
 
 export interface AppState {
@@ -17,35 +17,90 @@ export interface AppState {
   thresholds: RiskThresholds;
 }
 
+// Prüft, ob Daten aus dem alten Demoprojekt ("Precision-X") stammen
+export function containsDemoData(state: Partial<AppState>): boolean {
+  if (state.projectMeta?.projectName?.includes('Precision-X') || state.projectMeta?.partNumber?.includes('PX-8820')) {
+    return true;
+  }
+  if (state.steps?.some(s => s.name?.includes('Precision') || s.id === 'step-101')) {
+    return true;
+  }
+  if (state.fmeaItems?.some(f => f.id === 'fmea-101' || f.failureMode?.includes('Legierung') || f.failureEffect?.includes('Festigkeitsprobleme'))) {
+    return true;
+  }
+  return false;
+}
+
+export function purgeAllDemoStorage(): void {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('fmea_') || key.includes('process') || key.includes('control_plan'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch (e) {
+    console.error('Fehler beim Bereinigen des localStorage:', e);
+  }
+}
+
 export function loadAppState(): AppState {
   try {
+    // 1. Zuerst prüfen, ob noch alte Demodaten im localStorage schlummern
+    let hasDemoInStorage = false;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('fmea_')) {
+        const val = localStorage.getItem(key) || '';
+        if (val.includes('Precision-X') || val.includes('PX-8820') || val.includes('fmea-101') || val.includes('AlSi9Cu3')) {
+          hasDemoInStorage = true;
+          break;
+        }
+      }
+    }
+
+    if (hasDemoInStorage) {
+      console.warn('Alte Demodaten im Speicher gefunden -> vollständiger Reset auf leeres Projekt.');
+      purgeAllDemoStorage();
+      return resetToDefaults();
+    }
+
     const rawSteps = localStorage.getItem(STORAGE_KEYS.STEPS);
     const rawFmea = localStorage.getItem(STORAGE_KEYS.FMEA);
     const rawCp = localStorage.getItem(STORAGE_KEYS.CONTROL_PLAN);
     const rawMeta = localStorage.getItem(STORAGE_KEYS.PROJECT_META);
     const rawThresholds = localStorage.getItem(STORAGE_KEYS.THRESHOLDS);
 
-    return {
-      steps: rawSteps ? JSON.parse(rawSteps) : DEFAULT_PROCESS_STEPS,
-      fmeaItems: rawFmea ? JSON.parse(rawFmea) : DEFAULT_FMEA_ITEMS,
-      controlPlanItems: rawCp ? JSON.parse(rawCp) : DEFAULT_CONTROL_PLAN_ITEMS,
+    const parsed: AppState = {
+      steps: rawSteps ? JSON.parse(rawSteps) : [],
+      fmeaItems: rawFmea ? JSON.parse(rawFmea) : [],
+      controlPlanItems: rawCp ? JSON.parse(rawCp) : [],
       projectMeta: rawMeta ? JSON.parse(rawMeta) : DEFAULT_PROJECT_META,
       thresholds: rawThresholds ? JSON.parse(rawThresholds) : DEFAULT_THRESHOLDS,
     };
+
+    if (containsDemoData(parsed)) {
+      purgeAllDemoStorage();
+      return resetToDefaults();
+    }
+
+    return parsed;
   } catch (err) {
     console.error('Fehler beim Laden aus localStorage', err);
-    return {
-      steps: DEFAULT_PROCESS_STEPS,
-      fmeaItems: DEFAULT_FMEA_ITEMS,
-      controlPlanItems: DEFAULT_CONTROL_PLAN_ITEMS,
-      projectMeta: DEFAULT_PROJECT_META,
-      thresholds: DEFAULT_THRESHOLDS,
-    };
+    return resetToDefaults();
   }
 }
 
 export function saveAppState(state: AppState): void {
   try {
+    // Verhindern, dass versehentlich Demodaten zurückgespeichert werden
+    if (containsDemoData(state)) {
+      purgeAllDemoStorage();
+      return;
+    }
+
     localStorage.setItem(STORAGE_KEYS.STEPS, JSON.stringify(state.steps));
     localStorage.setItem(STORAGE_KEYS.FMEA, JSON.stringify(state.fmeaItems));
     localStorage.setItem(STORAGE_KEYS.CONTROL_PLAN, JSON.stringify(state.controlPlanItems));
@@ -57,11 +112,24 @@ export function saveAppState(state: AppState): void {
 }
 
 export function resetToDefaults(): AppState {
+  purgeAllDemoStorage();
   const defaults: AppState = {
     steps: [],
     fmeaItems: [],
     controlPlanItems: [],
-    projectMeta: DEFAULT_PROJECT_META,
+    projectMeta: {
+      projectName: "Neues FMEA & Kontrollplan Projekt",
+      documentNumber: "",
+      partNumber: "",
+      partDescription: "",
+      plantLocation: "",
+      customer: "",
+      responsibleLead: "Michael Schellenberger",
+      coreTeam: "",
+      fmeaDate: new Date().toISOString().split('T')[0],
+      revisionDate: new Date().toISOString().split('T')[0],
+      revisionNumber: "Rev. 1.0",
+    },
     thresholds: DEFAULT_THRESHOLDS,
   };
   saveAppState(defaults);
