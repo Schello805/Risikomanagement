@@ -122,7 +122,7 @@ Im Footer der Webapplikation wird die Revisionsnummer automatisch mit jedem Buil
 ## 👤 Autor & Open Source
 
 - **Projektleiter & Urheber:** **Michael Schellenberger**
-- **Repository:** Wird bei Veröffentlichung auf GitHub hinterlegt.
+- **GitHub Repository:** [https://github.com/Schello805/Risikomanagement](https://github.com/Schello805/Risikomanagement)
 - **Lizenz:** **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**
   - *Freie Nutzung, Vervielfältigung und Anpassung für alle nicht-kommerziellen Zwecke unter Namensnennung.*
   - Kommerzielle Nutzung bedarf der vorherigen schriftlichen Zustimmung des Urhebers.

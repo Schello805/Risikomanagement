@@ -5,6 +5,11 @@
   "private": false,
   "description": "Moderne, integrierte FMEA & Kontrollplan (Produktionslenkungsplan) Webapplikation vom Wareneingang bis zum Versand",
   "author": "Michael Schellenberger",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Schello805/Risikomanagement.git"
+  },
+  "homepage": "https://Schello805.github.io/Risikomanagement",
   "license": "CC-BY-NC-4.0",
   "scripts": {
     "dev": "vite",

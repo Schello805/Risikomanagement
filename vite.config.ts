@@ -6,6 +6,7 @@ const buildDate = new Date().toISOString().split('T')[0].replace(/-/g, '.');
 const buildRev = `v${pkg.version}+build.${buildDate}`;
 
 export default defineConfig({
+  base: './',
   plugins: [react()],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),

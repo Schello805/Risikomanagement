@@ -6,7 +6,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({
-  githubUrl = "https://github.com/michaelschellenberger/fmea-kontrollplan"
+  githubUrl = "https://github.com/Schello805/Risikomanagement"
 }) => {
   // Global build revision and timestamp injected by Vite
   const appRev = typeof __APP_REV__ !== 'undefined' ? __APP_REV__ : 'v1.0.0+rev.2026';
