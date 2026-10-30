@@ -198,12 +198,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Section 3: Reset Demo Data */}
+          {/* Section 3: Reset Data */}
           <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
             <button
               type="button"
               onClick={() => {
-                if (confirm('Möchtest du wirklich alle Daten auf das Standard-Beispiel (Wareneingang bis Versand) zurücksetzen?')) {
+                if (confirm('Möchtest du wirklich alle Daten löschen und das Projekt vollständig leeren?')) {
                   onResetDefaults();
                   onClose();
                 }
@@ -211,7 +211,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 font-medium p-1 transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Auf Standard-Beispiel zurücksetzen</span>
+              <span>Alle Projektdaten leeren</span>
             </button>
           </div>
 

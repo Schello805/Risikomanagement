@@ -209,21 +209,6 @@ export const ProcessFlowView: React.FC<ProcessFlowViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {onResetHierarchy && (
-            <button
-              onClick={() => {
-                if (confirm('Standard-Prozesshierarchie mit Wareneingang (10.1, 10.2, 10.3) bis Versand neu laden?')) {
-                  onResetHierarchy();
-                }
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all"
-              title="Standard-Hierarchie (WE Buchung, WE Prüfung etc.) laden"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-              <span>Standard-Hierarchie laden</span>
-            </button>
-          )}
-
           <button
             onClick={() => handleOpenAddModal(1)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm transition-all active:scale-95"
@@ -259,7 +244,25 @@ export const ProcessFlowView: React.FC<ProcessFlowViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {hierarchicalSteps.map(({ step, isSub, parentStep }) => {
+              {hierarchicalSteps.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-16 text-center text-slate-400">
+                    <Layers className="w-10 h-10 mx-auto mb-3 opacity-40 text-slate-500" />
+                    <h3 className="text-sm font-bold text-slate-800 mb-1">Noch keine Prozessschritte angelegt</h3>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto mb-4">
+                      Beginne mit deinem ersten Hauptprozess (z. B. "10 - Wareneingang"), um deine Fertigungskette zu definieren.
+                    </p>
+                    <button
+                      onClick={() => handleOpenAddModal(1)}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs shadow-sm transition-all hover:shadow active:scale-95"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Ersten Hauptprozess anlegen</span>
+                    </button>
+                  </td>
+                </tr>
+              ) : (
+                hierarchicalSteps.map(({ step, isSub, parentStep }) => {
                 const cat = CATEGORY_CONFIG[step.category] || CATEGORY_CONFIG.fertigung;
                 const stats = getStepStats(step);
                 const isCollapsed = collapsedParentIds.has(step.id);
@@ -428,7 +431,7 @@ export const ProcessFlowView: React.FC<ProcessFlowViewProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>

@@ -2,11 +2,11 @@ import { ProcessStep, FmeaItem, ControlPlanItem, ProjectMeta, RiskThresholds } f
 import { DEFAULT_PROCESS_STEPS, DEFAULT_FMEA_ITEMS, DEFAULT_CONTROL_PLAN_ITEMS, DEFAULT_PROJECT_META, DEFAULT_THRESHOLDS } from '../data/defaultData';
 
 const STORAGE_KEYS = {
-  STEPS: 'fmea_process_steps_v3',
-  FMEA: 'fmea_items_v3',
-  CONTROL_PLAN: 'fmea_control_plan_items_v3',
-  PROJECT_META: 'fmea_project_meta_v3',
-  THRESHOLDS: 'fmea_risk_thresholds_v3',
+  STEPS: 'fmea_process_steps_v4',
+  FMEA: 'fmea_items_v4',
+  CONTROL_PLAN: 'fmea_control_plan_items_v4',
+  PROJECT_META: 'fmea_project_meta_v4',
+  THRESHOLDS: 'fmea_risk_thresholds_v4',
 };
 
 export interface AppState {
@@ -25,41 +25,15 @@ export function loadAppState(): AppState {
     const rawMeta = localStorage.getItem(STORAGE_KEYS.PROJECT_META);
     const rawThresholds = localStorage.getItem(STORAGE_KEYS.THRESHOLDS);
 
-    let parsedSteps: ProcessStep[] = rawSteps ? JSON.parse(rawSteps) : DEFAULT_PROCESS_STEPS;
-    let parsedFmea: FmeaItem[] = rawFmea ? JSON.parse(rawFmea) : DEFAULT_FMEA_ITEMS;
-    let parsedCp: ControlPlanItem[] = rawCp ? JSON.parse(rawCp) : DEFAULT_CONTROL_PLAN_ITEMS;
-    let parsedMeta: ProjectMeta = rawMeta ? JSON.parse(rawMeta) : DEFAULT_PROJECT_META;
-    let parsedThresholds: RiskThresholds = rawThresholds ? JSON.parse(rawThresholds) : DEFAULT_THRESHOLDS;
-
-    // Intelligente Migration: Wenn noch keine hierarchischen Teilschritte (level === 2) existieren,
-    // lade automatisch den neuen hierarchischen Standard (Wareneingang mit 10.1, 10.2, 10.3 etc.)
-    const hasSubSteps = parsedSteps.some((s) => s.level === 2 || (s.parentId && s.parentId.length > 0));
-    if (!hasSubSteps || parsedSteps.length <= 8) {
-      console.log('Automatisches Upgrade auf neue Prozesshierarchie...');
-      parsedSteps = DEFAULT_PROCESS_STEPS;
-      parsedFmea = DEFAULT_FMEA_ITEMS;
-      parsedCp = DEFAULT_CONTROL_PLAN_ITEMS;
-      parsedMeta = DEFAULT_PROJECT_META;
-      parsedThresholds = DEFAULT_THRESHOLDS;
-      
-      saveAppState({
-        steps: parsedSteps,
-        fmeaItems: parsedFmea,
-        controlPlanItems: parsedCp,
-        projectMeta: parsedMeta,
-        thresholds: parsedThresholds,
-      });
-    }
-
     return {
-      steps: parsedSteps,
-      fmeaItems: parsedFmea,
-      controlPlanItems: parsedCp,
-      projectMeta: parsedMeta,
-      thresholds: parsedThresholds,
+      steps: rawSteps ? JSON.parse(rawSteps) : DEFAULT_PROCESS_STEPS,
+      fmeaItems: rawFmea ? JSON.parse(rawFmea) : DEFAULT_FMEA_ITEMS,
+      controlPlanItems: rawCp ? JSON.parse(rawCp) : DEFAULT_CONTROL_PLAN_ITEMS,
+      projectMeta: rawMeta ? JSON.parse(rawMeta) : DEFAULT_PROJECT_META,
+      thresholds: rawThresholds ? JSON.parse(rawThresholds) : DEFAULT_THRESHOLDS,
     };
   } catch (err) {
-    console.error('Fehler beim Laden aus localStorage, lade Standarddaten', err);
+    console.error('Fehler beim Laden aus localStorage', err);
     return {
       steps: DEFAULT_PROCESS_STEPS,
       fmeaItems: DEFAULT_FMEA_ITEMS,
@@ -84,9 +58,9 @@ export function saveAppState(state: AppState): void {
 
 export function resetToDefaults(): AppState {
   const defaults: AppState = {
-    steps: DEFAULT_PROCESS_STEPS,
-    fmeaItems: DEFAULT_FMEA_ITEMS,
-    controlPlanItems: DEFAULT_CONTROL_PLAN_ITEMS,
+    steps: [],
+    fmeaItems: [],
+    controlPlanItems: [],
     projectMeta: DEFAULT_PROJECT_META,
     thresholds: DEFAULT_THRESHOLDS,
   };
